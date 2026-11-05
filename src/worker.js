@@ -1,8 +1,10 @@
 // Сервер обліку речей Феміністичної майстерні.
 // Статичні файли з ./public віддає Cloudflare, а запити на /api/* обробляє цей код.
-// Кожен запит до API перевіряється токеном Cloudflare Access: без входу нічого не можна ні прочитати, ні змінити.
+// Вхід через Cloudflare Access необов’язковий: поки TEAM_DOMAIN і POLICY_AUD не заповнені, облік відкритий для всіх, хто має посилання.
 
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+// Розділ у адресі → таблиця в базі
+const TABLES = { items: "items", keys: "keyholders" };
 const MAX_BODY = 64 * 1024;
 
 export default {
@@ -15,13 +17,16 @@ export default {
 
     try {
       await ensureSchema(env);
-      if (url.pathname === "/api/items" && request.method === "GET") return listItems(env, auth.email);
-      const m = url.pathname.match(/^\/api\/items\/([^/]+)$/);
+      const m = url.pathname.match(/^\/api\/(items|keys)(?:\/([^/]+))?$/);
       if (m) {
-        const id = decodeURIComponent(m[1]);
-        if (!ID_RE.test(id)) return json({ error: "bad_id" }, 400);
-        if (request.method === "PUT") return saveItem(request, env, id, auth.email);
-        if (request.method === "DELETE") return deleteItem(env, id);
+        const table = TABLES[m[1]];
+        if (!m[2] && request.method === "GET") return listItems(env, table, auth.email);
+        if (m[2]) {
+          const id = decodeURIComponent(m[2]);
+          if (!ID_RE.test(id)) return json({ error: "bad_id" }, 400);
+          if (request.method === "PUT") return saveItem(request, env, table, id, auth.email);
+          if (request.method === "DELETE") return deleteItem(env, table, id);
+        }
       }
       return json({ error: "not_found" }, 404);
     } catch (e) {
@@ -35,19 +40,18 @@ export default {
 let schemaReady = false;
 async function ensureSchema(env) {
   if (schemaReady) return;
-  await env.DB.prepare(
-    "CREATE TABLE IF NOT EXISTS items (id TEXT PRIMARY KEY, data TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1, updated TEXT NOT NULL)"
-  ).run();
+  const sql = (t) => `CREATE TABLE IF NOT EXISTS ${t} (id TEXT PRIMARY KEY, data TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1, updated TEXT NOT NULL)`;
+  await env.DB.batch(Object.values(TABLES).map((t) => env.DB.prepare(sql(t))));
   schemaReady = true;
 }
 
-async function listItems(env, email) {
-  const { results } = await env.DB.prepare("SELECT id, data, version FROM items").all();
+async function listItems(env, table, email) {
+  const { results } = await env.DB.prepare(`SELECT id, data, version FROM ${table}`).all();
   const items = results.map((r) => Object.assign(JSON.parse(r.data), { id: r.id, _v: r.version }));
   return json({ items, me: email });
 }
 
-async function saveItem(request, env, id, email) {
+async function saveItem(request, env, table, id, email) {
   const text = await request.text();
   if (text.length > MAX_BODY) return json({ error: "too_large" }, 400);
   let body;
@@ -68,11 +72,11 @@ async function saveItem(request, env, id, email) {
   let res;
   if (version === 0) {
     res = await env.DB.prepare(
-      "INSERT INTO items (id, data, version, updated) VALUES (?, ?, 1, ?) ON CONFLICT(id) DO NOTHING"
+      `INSERT INTO ${table} (id, data, version, updated) VALUES (?, ?, 1, ?) ON CONFLICT(id) DO NOTHING`
     ).bind(id, data, item.updated).run();
   } else {
     res = await env.DB.prepare(
-      "UPDATE items SET data = ?, version = version + 1, updated = ? WHERE id = ? AND version = ?"
+      `UPDATE ${table} SET data = ?, version = version + 1, updated = ? WHERE id = ? AND version = ?`
     ).bind(data, item.updated, id, version).run();
   }
   // Нічого не змінилося: хтось інший уже встиг оновити цю річ
@@ -80,8 +84,8 @@ async function saveItem(request, env, id, email) {
   return json({ item, version: version + 1 });
 }
 
-async function deleteItem(env, id) {
-  await env.DB.prepare("DELETE FROM items WHERE id = ?").bind(id).run();
+async function deleteItem(env, table, id) {
+  await env.DB.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
   return json({ ok: true });
 }
 
@@ -99,7 +103,7 @@ async function checkAccess(request, env) {
   const team = (env.TEAM_DOMAIN || "").replace(/\/+$/, "");
   const aud = env.POLICY_AUD || "";
   if (!team || !aud || aud.startsWith("ВСТАВТЕ")) return { ok: true, email: null };
-  
+
   const token = request.headers.get("cf-access-jwt-assertion");
   if (!token) return { ok: false, status: 401, error: "no_token" };
 
