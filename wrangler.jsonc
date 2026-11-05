@@ -1,0 +1,27 @@
+{
+  // Назва сервісу. Від неї залежить адреса: https://richi-maisterni.<ваш-піддомен>.workers.dev
+  "name": "richi-maisterni",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-11-01",
+
+  // Сторінку віддаємо з теки public, а запити /api/* завжди йдуть у src/worker.js
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // База D1. Cloudflare створить її сам під час першого викладання
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "richi-maisterni"
+    }
+  ],
+
+  // Дані Cloudflare Access. Заповніть після кроку 4 інструкції
+  "vars": {
+    "TEAM_DOMAIN": "https://ВСТАВТЕ_НАЗВУ_КОМАНДИ.cloudflareaccess.com",
+    "POLICY_AUD": "ВСТАВТЕ_AUD"
+  }
+}

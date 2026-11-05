@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Речі Феміністичної майстерні</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --ink:#17202B; --muted:#5B6673; --line:#D8DDE3;
+  --media:#2A4FD4; --media-soft:#E6EBFB; --go:#127A55; --go-soft:#E1F2EA;
+  --warn:#A9520A; --warn-soft:#FBEBDC; --danger:#B3261E; --danger-soft:#FBE5E3;
+  --focus:#2A4FD4;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151B; --surface:#1A2029; --ink:#E7EBF0; --muted:#9AA4B0; --line:#2D3541;
+    --media:#8AA3FF; --media-soft:#212B48; --go:#52C796; --go-soft:#16322A;
+    --warn:#F2A65E; --warn-soft:#3A2A1A; --danger:#FF8C82; --danger-soft:#3D1E1C;
+    --focus:#8AA3FF; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151B; --surface:#1A2029; --ink:#E7EBF0; --muted:#9AA4B0; --line:#2D3541;
+  --media:#8AA3FF; --media-soft:#212B48; --go:#52C796; --go-soft:#16322A;
+  --warn:#F2A65E; --warn-soft:#3A2A1A; --danger:#FF8C82; --danger-soft:#3D1E1C;
+  --focus:#8AA3FF; color-scheme: dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px;margin-bottom:28px}
+h1{font-family:"Unbounded","Onest",system-ui,sans-serif;font-weight:700;font-size:clamp(28px,5vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0}
+.sub{color:var(--muted);margin:8px 0 0;max-width:52ch}
+
+
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--ink);border-bottom:1px solid var(--line);margin-bottom:20px}
+.stat{padding:14px 16px 14px 0}
+.stat + .stat{padding-left:16px;border-left:1px solid var(--line)}
+.stat b{display:block;font-family:"Unbounded","Onest",sans-serif;font-weight:500;font-size:24px;line-height:1.2}
+.stat span{color:var(--muted);font-size:14px}
+.stat.alert b{color:var(--danger)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.toolbar input[type=search]{flex:1 1 240px;min-width:0}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px;width:100%}
+.toolbar select{width:auto}
+textarea{min-height:72px;resize:vertical}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.btn.small{padding:5px 10px;font-size:14px}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn[hidden]{display:none}
+
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:15px}
+.banner[hidden]{display:none}
+
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:96px minmax(0,1.6fr) 130px minmax(0,1fr) 120px;gap:14px;align-items:center;padding:12px 16px;border-top:1px solid var(--line);cursor:pointer}
+.row:first-child{border-top:0}
+.row:hover{background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.row.head{cursor:default;color:var(--muted);font-size:13px;padding-top:10px;padding-bottom:10px;background:transparent}
+.row.head:hover{background:transparent}
+.tag{font-weight:600;font-size:14px;padding:3px 8px 3px 10px;border-radius:4px;border-left:4px solid var(--muted);background:var(--bg);justify-self:start;font-variant-numeric:tabular-nums}
+.tag.media{border-color:var(--media);background:var(--media-soft);color:var(--media)}
+.tag.go{border-color:var(--go);background:var(--go-soft);color:var(--go)}
+.name{font-weight:600;overflow-wrap:anywhere}
+.meta{color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.chip{display:inline-block;font-size:13px;font-weight:500;padding:2px 9px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.chip.vydano{background:var(--media-soft);color:var(--media)}
+.chip.remont{background:var(--warn-soft);color:var(--warn)}
+.chip.spysano{text-decoration:line-through}
+.chip.late{background:var(--danger-soft);color:var(--danger)}
+.who{font-size:14px;overflow-wrap:anywhere}
+.who .late{color:var(--danger);font-weight:500}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+.row.off .name,.row.off .who{color:var(--muted)}
+@media (max-width:760px){
+  .row.head{display:none}
+  .row{grid-template-columns:auto 1fr;grid-template-areas:"tag status" "name name" "who who" "acts acts";gap:6px 10px}
+  .row .tag{grid-area:tag}.row .st{grid-area:status;justify-self:end}.row .nm{grid-area:name}.row .who{grid-area:who}.row .acts{grid-area:acts;justify-content:flex-start}
+}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty p{margin:0 0 14px}
+
+dialog{border:0;border-radius:14px;padding:0;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 32px);background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,14,20,.45)}
+.dlg{padding:22px 22px 18px;overflow:auto;max-height:calc(100dvh - 32px)}
+.dlg h2{font-family:"Unbounded","Onest",sans-serif;font-weight:500;font-size:20px;margin:0 0 16px;line-height:1.25}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.grid .full{grid-column:1/-1}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:14px;font-weight:500}
+label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
+.hint{color:var(--muted);font-size:13px;font-weight:400;margin-top:4px}
+.dlg-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.dlg-foot .r{display:flex;gap:8px;margin-left:auto}
+.hist{margin-top:18px}
+.hist h3{font-size:15px;margin:0 0 8px}
+.hist ol{list-style:none;margin:0;padding:0;font-size:14px}
+.hist li{padding:6px 0;border-top:1px solid var(--line);display:flex;gap:12px}
+.hist time{color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+.err{color:var(--danger);font-size:14px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Речі Феміністичної майстерні</h1>
+      <p class="sub">Що в нас є, де воно лежить і в кого зараз.</p>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="stats" aria-label="Підсумки">
+    <div class="stat"><b id="sCount">0</b><span>речей в обліку</span></div>
+    <div class="stat"><b id="sOut">0</b><span>зараз видано</span></div>
+  </section>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Пошук: назва, номер, у кого, де лежить" aria-label="Пошук">
+    <select id="fStatus" aria-label="Статус">
+      <option value="">Усі статуси</option>
+      <option value="na-misci">На місці</option>
+      <option value="vydano">Видано</option>
+      <option value="remont">У ремонті</option>
+      <option value="spysano">Списано</option>
+    </select>
+    <select id="fCat" aria-label="Категорія"><option value="">Усі категорії</option></select>
+    <button class="btn" id="exportBtn" type="button">Вивантажити CSV</button>
+    <button class="btn primary" id="addBtn" type="button">Додати річ</button>
+  </div>
+
+  <div class="list" id="list" aria-live="polite"><div class="empty">Завантажуємо облік…</div></div>
+</div>
+
+<!-- Картка речі -->
+<dialog id="itemDlg" aria-labelledby="itemTitle">
+  <form class="dlg" id="itemForm" method="dialog" novalidate>
+    <h2 id="itemTitle">Нова річ</h2>
+    <div class="grid">
+      <label class="full">Назва
+        <input name="name" required maxlength="160" placeholder="Наприклад, ноутбук Lenovo ThinkPad E14">
+      </label>
+      <label>Інвентарний номер
+        <input name="inv" maxlength="30">
+        <div class="hint">Підставляємо наступний вільний, можна змінити</div>
+      </label>
+      <label>Категорія
+        <input name="category" list="catList" maxlength="60" placeholder="Техніка, звук, меблі…">
+      </label>
+      <label>Статус
+        <select name="status">
+          <option value="na-misci">На місці</option>
+          <option value="vydano">Видано</option>
+          <option value="remont">У ремонті</option>
+          <option value="spysano">Списано</option>
+        </select>
+      </label>
+      <label>Де лежить
+        <input name="location" maxlength="120" placeholder="Офіс, шафа 2">
+      </label>
+      <label>Відповідальна особа
+        <input name="responsible" maxlength="80" placeholder="Хто відповідає за річ">
+      </label>
+      <label>Звідки взялася
+        <select name="source">
+          <option value="vlasni">Власні кошти</option>
+          <option value="grant">Грант</option>
+          <option value="pozhertva">Пожертва</option>
+          <option value="inshe">Інше</option>
+        </select>
+      </label>
+      <label>Грант або донор
+        <input name="donor" maxlength="120" placeholder="Назва програми чи донора">
+        <div class="hint">Знадобиться для звіту донорові</div>
+      </label>
+      <label>Дата придбання
+        <input name="bought" type="date">
+      </label>
+      <label class="full">Серійний номер
+        <input name="serial" maxlength="80">
+      </label>
+      <label class="full">Примітки
+        <textarea name="notes" maxlength="2000"></textarea>
+      </label>
+    </div>
+    <div class="hist" id="histBox" hidden>
+      <h3>Історія</h3>
+      <ol id="histList"></ol>
+    </div>
+    <div class="err" id="itemErr" hidden></div>
+    <div class="dlg-foot">
+      <button type="button" class="btn danger" id="delBtn" hidden>Видалити</button>
+      <div class="r">
+        <button type="button" class="btn" data-close>Скасувати</button>
+        <button type="submit" class="btn primary" id="saveBtn">Зберегти</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Видача -->
+<dialog id="issueDlg" aria-labelledby="issueTitle">
+  <form class="dlg" id="issueForm" method="dialog" novalidate>
+    <h2 id="issueTitle">Видати річ</h2>
+    <div class="grid">
+      <label class="full">Кому
+        <input name="holder" required maxlength="80" placeholder="Ім’я та прізвище">
+      </label>
+      <label>Повернути до
+        <input name="due" type="date">
+        <div class="hint">Можна лишити порожнім</div>
+      </label>
+      <label>Навіщо
+        <input name="purpose" maxlength="120" placeholder="Зйомка, відрядження…">
+      </label>
+    </div>
+    <div class="err" id="issueErr" hidden></div>
+    <div class="dlg-foot">
+      <div class="r">
+        <button type="button" class="btn" data-close>Скасувати</button>
+        <button type="submit" class="btn primary">Видати</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<datalist id="catList"></datalist>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+  const STATUS = {"na-misci":"На місці","vydano":"Видано","remont":"У ремонті","spysano":"Списано"};
+  const SOURCE = {vlasni:"Власні кошти",grant:"Грант",pozhertva:"Пожертва",inshe:"Інше"};
+  const PREFIX = "ФМ";
+  const BASE_CATS = ["Ноутбуки й комп’ютери","Фото й відео","Звук","Телефони й планшети","Меблі","Офісне","Інше"];
+  const $ = s => document.querySelector(s);
+  const state = {items:[], q:"", status:"", cat:"", editingId:null, issuingId:null, canWrite:true, mode:"loading", me:null};
+
+  // ---------- helpers ----------
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+  const fmtDate = iso => { if(!iso) return ""; const [y,m,d] = iso.slice(0,10).split("-"); return `${d}.${m}.${y}`; };
+  const uid = () => "i" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
+  function banner(msg){ const b=$("#banner"); if(!msg){b.hidden=true;return;} b.textContent=msg; b.hidden=false; }
+
+  function nextInv(exceptId){
+    let max = 0;
+    for(const it of state.items){
+      if(it.id===exceptId || !it.inv) continue;
+      const m = String(it.inv).match(/(\d+)\s*$/); if(m) max = Math.max(max, parseInt(m[1],10));
+    }
+    return `${PREFIX}-${String(max+1).padStart(3,"0")}`;
+  }
+  // "__me__" сервер замінює на пошту того, хто увійшов через Cloudflare Access
+  function addHistory(item, text){
+    const h = Array.isArray(item.history) ? item.history.slice() : [];
+    h.unshift({t:new Date().toISOString(), by:"__me__", text});
+    item.history = h.slice(0,50);
+  }
+
+  // ---------- сервер ----------
+  class ApiError extends Error { constructor(status, code){ super(code||String(status)); this.status=status; this.code=code; } }
+  async function api(method, path, body){
+    let res;
+    try{
+      res = await fetch(path, {method, headers: body ? {"Content-Type":"application/json"} : {}, body: body ? JSON.stringify(body) : undefined, credentials:"same-origin", cache:"no-store"});
+    }catch(e){ throw new ApiError(0, "network"); }
+    let data = null; try{ data = await res.json(); }catch(e){}
+    if(!res.ok) throw new ApiError(res.status, data && data.error);
+    return data;
+  }
+  function accessProblem(e){
+    if(e.code==="access_not_configured") return "Сервер працює, але вхід через Cloudflare Access ще не налаштований. Пройдіть кроки 6–7 з інструкції.";
+    if(e.status===401 || e.status===403) return "Немає доступу або сесія закінчилася. Оновіть сторінку й увійдіть ще раз.";
+    return null;
+  }
+  async function load(){
+    try{
+      const data = await api("GET", "/api/items");
+      state.items = data.items || []; state.me = data.me || null; state.mode = "api";
+      banner(""); render();
+    }catch(e){
+      const p = accessProblem(e);
+      if(state.mode==="loading"){ state.mode = "api"; render(); }
+      banner(p || "Не можемо дістатися до сервера. Показуємо останні завантажені дані, вони можуть бути неактуальними.");
+    }
+  }
+  const store = {
+    async save(item){
+      const clean = JSON.parse(JSON.stringify(item)); const version = clean._v || 0; delete clean.id; delete clean._v;
+      const r = await api("PUT", "/api/items/" + encodeURIComponent(item.id), {version, item:clean});
+      const i = state.items.findIndex(x=>x.id===item.id);
+      const saved = Object.assign({}, r.item, {id:item.id, _v:r.version});
+      if(i>=0) state.items[i] = saved; else state.items.push(saved);
+      render();
+    },
+    async remove(id){
+      await api("DELETE", "/api/items/" + encodeURIComponent(id));
+      state.items = state.items.filter(x=>x.id!==id); render();
+    }
+  };
+  async function withRetry(fn){
+    try{ return await fn(); }
+    catch(e){ if(e.status===0 || e.status>=500){ await new Promise(r=>setTimeout(r,500+Math.random()*700)); return fn(); } throw e; }
+  }
+  function errText(e){
+    if(e.status===409){ load(); return "Хтось щойно змінив цю річ. Ми підтягнули свіжі дані: перевірте й повторіть."; }
+    const p = accessProblem(e); if(p) return p;
+    if(e.status===400) return "Сервер не прийняв дані. Перевірте поля й спробуйте ще раз.";
+    return "Не вдалося зберегти. Перевірте з’єднання і спробуйте ще раз.";
+  }
+
+  // Оновлюємо список кожні 20 секунд, поки вкладка відкрита
+  setInterval(()=>{ if(!document.hidden) load(); }, 20000);
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) load(); });
+
+  // ---------- render ----------
+  function filtered(){
+    const q = state.q.trim().toLowerCase();
+    return state.items.filter(it=>{
+      if(state.status && it.status!==state.status) return false;
+      if(state.cat && (it.category||"")!==state.cat) return false;
+      if(q){
+        const hay = [it.name,it.inv,it.holder,it.location,it.responsible,it.serial,it.donor,it.category].join(" ").toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b)=> String(a.inv||"").localeCompare(String(b.inv||""),"uk",{numeric:true}));
+  }
+
+  function render(){
+    // підсумки без списаного
+    const active = state.items.filter(it=>it.status!=="spysano");
+    $("#sCount").textContent = active.length;
+    $("#sOut").textContent = active.filter(it=>it.status==="vydano").length;
+
+    // категорії
+    const cats = [...new Set([...BASE_CATS, ...state.items.map(i=>i.category).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,"uk"));
+    $("#catList").innerHTML = cats.map(c=>`<option value="${esc(c)}">`).join("");
+    const used = [...new Set(state.items.map(i=>i.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"uk"));
+    const fc = $("#fCat"); const cur = state.cat;
+    fc.innerHTML = `<option value="">Усі категорії</option>` + used.map(c=>`<option value="${esc(c)}"${c===cur?" selected":""}>${esc(c)}</option>`).join("");
+
+    const list = $("#list"); const rows = filtered();
+    if(state.mode==="loading"){ list.innerHTML = `<div class="empty">Завантажуємо облік…</div>`; return; }
+    if(!state.items.length){
+      list.innerHTML = `<div class="empty"><p>Тут поки порожньо. Почніть із того, що найчастіше бере команда: камери, мікрофони, ноутбуки.</p>${state.canWrite?`<button class="btn primary" type="button" data-act="add">Додати першу річ</button>`:""}</div>`;
+      return;
+    }
+    if(!rows.length){ list.innerHTML = `<div class="empty"><p>Нічого не знайшли. Спробуйте інший запит або приберіть фільтри.</p><button class="btn" type="button" data-act="reset">Прибрати фільтри</button></div>`; return; }
+
+    list.innerHTML = `<div class="row head" aria-hidden="true"><span>Номер</span><span>Річ</span><span>Статус</span><span>У кого / де</span><span></span></div>` +
+      rows.map(it=>{
+        const chip = `<span class="chip ${esc(it.status)}">${STATUS[it.status]||"—"}</span>`;
+        const metaBits = esc(it.category||"");
+        let who;
+        if(it.status==="vydano"){
+          who = `${esc(it.holder||"Без імені")}${it.due?`<br><span class="meta">до ${fmtDate(it.due)}</span>`:""}`;
+        } else {
+          who = `${esc(it.location||"")}${it.responsible?`<br><span class="meta">відповідає ${esc(it.responsible)}</span>`:""}` || `<span class="meta">не вказано</span>`;
+        }
+        let acts = "";
+        if(state.canWrite){
+          if(it.status==="vydano") acts = `<button class="btn small" type="button" data-act="return" data-id="${esc(it.id)}">Повернули</button>`;
+          else if(it.status==="na-misci") acts = `<button class="btn small" type="button" data-act="issue" data-id="${esc(it.id)}">Видати</button>`;
+        }
+        return `<div class="row${it.status==="spysano"?" off":""}" data-open="${esc(it.id)}" tabindex="0" role="button" aria-label="Відкрити: ${esc(it.name)}">
+          <span class="tag media">${esc(it.inv||"—")}</span>
+          <div class="nm"><div class="name">${esc(it.name)}</div><div class="meta">${metaBits}</div></div>
+          <div class="st">${chip}</div>
+          <div class="who">${who}</div>
+          <div class="acts">${acts}</div>
+        </div>`;
+      }).join("");
+  }
+
+  // ---------- item dialog ----------
+  const itemDlg = $("#itemDlg"), itemForm = $("#itemForm");
+  function openItem(id){
+    const it = id ? state.items.find(x=>x.id===id) : null;
+    state.editingId = it ? it.id : null;
+    itemForm.reset(); $("#itemErr").hidden = true;
+    const f = itemForm.elements;
+    $("#itemTitle").textContent = it ? it.name : "Нова річ";
+    f.name.value = it?.name||""; f.inv.value = it?.inv || nextInv();
+    f.category.value = it?.category||""; f.status.value = it?.status||"na-misci"; f.location.value = it?.location||"";
+    f.responsible.value = it?.responsible||""; f.source.value = it?.source||"vlasni"; f.donor.value = it?.donor||"";
+    f.bought.value = it?.bought||""; f.serial.value = it?.serial||""; f.notes.value = it?.notes||"";
+    f.status.querySelector('[value="vydano"]').disabled = !(it && it.status==="vydano");
+    for(const el of f) if(el.name) el.disabled = el.disabled || !state.canWrite;
+    $("#saveBtn").hidden = !state.canWrite;
+    const del = $("#delBtn"); del.hidden = !(it && state.canWrite); del.textContent = "Видалити"; del.dataset.armed = "";
+    renderHistory(it);
+    itemDlg.showModal(); if(state.canWrite) setTimeout(()=>f.name.focus(),0);
+  }
+  async function renderHistory(it){
+    const box = $("#histBox"), ol = $("#histList");
+    const h = it && Array.isArray(it.history) ? it.history : [];
+    if(!h.length){ box.hidden = true; return; }
+    box.hidden = false;
+    ol.innerHTML = "";
+    for(const e of h){
+      const li = document.createElement("li");
+      const t = document.createElement("time"); t.dateTime = e.t; t.textContent = fmtDate(e.t);
+      const s = document.createElement("span");
+      const who = e.by && e.by!=="__me__" ? ` (${e.by})` : "";
+      s.textContent = e.text + who;
+      li.append(t, s); ol.append(li);
+    }
+  }
+  itemForm.addEventListener("submit", async ev=>{
+    ev.preventDefault(); if(!state.canWrite) return;
+    const f = itemForm.elements; const err = $("#itemErr");
+    const name = f.name.value.trim();
+    if(!name){ err.textContent = "Вкажіть назву речі."; err.hidden = false; f.name.focus(); return; }
+    const inv = f.inv.value.trim();
+    if(inv && state.items.some(x=>x.id!==state.editingId && String(x.inv).toLowerCase()===inv.toLowerCase())){
+      err.textContent = `Номер ${inv} уже зайнятий. Підставте інший.`; err.hidden = false; f.inv.focus(); return;
+    }
+    const prev = state.items.find(x=>x.id===state.editingId);
+    const item = prev ? JSON.parse(JSON.stringify(prev)) : {id:uid(), created:new Date().toISOString(), history:[]};
+    Object.assign(item, {
+      name, inv: inv || nextInv(item.id), category:f.category.value.trim(),
+      status:f.status.value, location:f.location.value.trim(), responsible:f.responsible.value.trim(),
+      source:f.source.value, donor:f.donor.value.trim(), bought:f.bought.value,
+      serial:f.serial.value.trim(), notes:f.notes.value.trim(), updated:new Date().toISOString()
+    });
+    if(item.status!=="vydano"){ item.holder=""; item.due=""; item.purpose=""; }
+    if(!prev) addHistory(item, "Додали в облік");
+    else {
+      const ch = [];
+      if(prev.status!==item.status) ch.push(`статус: ${STATUS[item.status]}`);
+      if((prev.location||"")!==item.location) ch.push(`місце: ${item.location||"не вказано"}`);
+      if((prev.responsible||"")!==item.responsible) ch.push(`відповідає: ${item.responsible||"ніхто"}`);
+      addHistory(item, ch.length ? "Змінили " + ch.join(", ") : "Оновили картку");
+    }
+    try{ await withRetry(()=>store.save(item)); itemDlg.close(); toast(prev?"Зберегли":"Додали в облік"); }
+    catch(e){ err.textContent = errText(e); err.hidden = false; }
+  });
+  $("#delBtn").addEventListener("click", async e=>{
+    const b = e.currentTarget;
+    if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Точно видалити? Краще списати"; setTimeout(()=>{ if(b.isConnected){b.dataset.armed="";b.textContent="Видалити";} },4000); return; }
+    try{ await withRetry(()=>store.remove(state.editingId)); itemDlg.close(); toast("Видалили"); }
+    catch(er){ const err=$("#itemErr"); err.textContent = errText(er); err.hidden=false; }
+  });
+
+  // ---------- issue / return ----------
+  const issueDlg = $("#issueDlg"), issueForm = $("#issueForm");
+  function openIssue(id){
+    const it = state.items.find(x=>x.id===id); if(!it) return;
+    state.issuingId = id; issueForm.reset(); $("#issueErr").hidden = true;
+    $("#issueTitle").textContent = `Видати: ${it.name}`;
+    issueForm.elements.due.min = todayISO();
+    issueDlg.showModal(); setTimeout(()=>issueForm.elements.holder.focus(),0);
+  }
+  issueForm.addEventListener("submit", async ev=>{
+    ev.preventDefault();
+    const f = issueForm.elements, err = $("#issueErr");
+    const holder = f.holder.value.trim();
+    if(!holder){ err.textContent="Вкажіть, кому видаєте."; err.hidden=false; f.holder.focus(); return; }
+    const it = JSON.parse(JSON.stringify(state.items.find(x=>x.id===state.issuingId)||null)); if(!it) return;
+    Object.assign(it,{status:"vydano", holder, due:f.due.value, purpose:f.purpose.value.trim(), updated:new Date().toISOString()});
+    addHistory(it, `Видали: ${holder}${it.due?`, до ${fmtDate(it.due)}`:""}${it.purpose?` (${it.purpose})`:""}`);
+    try{ await withRetry(()=>store.save(it)); issueDlg.close(); toast("Видали"); }
+    catch(e){ err.textContent = errText(e); err.hidden=false; }
+  });
+  async function doReturn(id){
+    const src = state.items.find(x=>x.id===id); if(!src) return;
+    const it = JSON.parse(JSON.stringify(src));
+    const who = it.holder;
+    Object.assign(it,{status:"na-misci", holder:"", due:"", purpose:"", updated:new Date().toISOString()});
+    addHistory(it, `Повернули${who?` від ${who}`:""}`);
+    try{ await withRetry(()=>store.save(it)); toast("Позначили як повернене"); }
+    catch(e){ toast(errText(e)); }
+  }
+
+  // ---------- CSV ----------
+  $("#exportBtn").addEventListener("click", async ()=>{
+    const rows = filtered();
+    const head = ["Інв. номер","Назва","Категорія","Статус","Де лежить","Відповідальна особа","У кого","Повернути до","Звідки","Грант / донор","Дата придбання","Серійний номер","Примітки"];
+    const q = v => { const s = String(v ?? ""); return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
+    const lines = [head.map(q).join(";")].concat(rows.map(it=>[
+      it.inv, it.name, it.category, STATUS[it.status], it.location, it.responsible,
+      it.status==="vydano"?it.holder:"", it.status==="vydano"?fmtDate(it.due):"", SOURCE[it.source], it.donor,
+      fmtDate(it.bought), it.serial, it.notes
+    ].map(q).join(";")));
+    const blob = new Blob(["\uFEFF"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `richi-maisterni-${todayISO()}.csv`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  });
+
+  // ---------- events ----------
+  let qT; $("#q").addEventListener("input", e=>{ clearTimeout(qT); qT=setTimeout(()=>{ state.q=e.target.value; render(); },120); });
+  $("#fStatus").addEventListener("change", e=>{ state.status=e.target.value; render(); });
+  $("#fCat").addEventListener("change", e=>{ state.cat=e.target.value; render(); });
+  $("#addBtn").addEventListener("click", ()=>openItem(null));
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
+  $("#list").addEventListener("click", e=>{
+    const a = e.target.closest("[data-act]");
+    if(a){
+      e.stopPropagation();
+      if(a.dataset.act==="add") return openItem(null);
+      if(a.dataset.act==="reset"){ state.q=""; state.status=""; state.cat=""; $("#q").value=""; $("#fStatus").value=""; render(); return; }
+      if(a.dataset.act==="issue") return openIssue(a.dataset.id);
+      if(a.dataset.act==="return") return doReturn(a.dataset.id);
+    }
+    const r = e.target.closest("[data-open]"); if(r) openItem(r.dataset.open);
+  });
+  $("#list").addEventListener("keydown", e=>{
+    if((e.key==="Enter"||e.key===" ") && e.target.matches("[data-open]")){ e.preventDefault(); openItem(e.target.dataset.open); }
+  });
+
+  render();
+  load();
+})();
+</script>
+</body>
+</html>
