@@ -110,6 +110,24 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
 .hist ol{list-style:none;margin:0;padding:0;font-size:14px}
 .hist li{padding:6px 0;border-top:1px solid var(--line);display:flex;gap:12px}
 .hist time{color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.tabs{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;margin-top:16px}
+.tabs button{border:0;background:transparent;padding:8px 18px;border-radius:999px;cursor:pointer;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+.seg{border:0;padding:0;margin:0;min-width:0}
+.seg legend{font-size:14px;font-weight:500;padding:0;margin-bottom:5px}
+.seg .opts{display:flex;flex-wrap:wrap;gap:8px}
+.seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:400}
+.seg label:has(input:checked){border-color:var(--ink);background:var(--bg);font-weight:500}
+.seg input{width:auto;margin:0;accent-color:var(--ink)}
+.krow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:14px;align-items:center;padding:14px 16px;border-top:1px solid var(--line);cursor:pointer}
+.krow:first-child{border-top:0}
+.krow:hover{background:color-mix(in srgb,var(--bg) 60%,transparent)}
+@media (max-width:640px){.krow{grid-template-columns:1fr;gap:6px}}
+.keys{display:flex;flex-wrap:wrap;gap:6px}
+.key{display:inline-flex;align-items:center;gap:4px;font-size:14px;padding:3px 10px;border-radius:999px;background:var(--media-soft);color:var(--media);font-weight:500}
+.key button{border:0;background:transparent;color:inherit;cursor:pointer;padding:0 2px;font-size:16px;line-height:1}
+.keyadd{display:flex;gap:8px;margin-top:8px}
+.keyadd input{flex:1}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
@@ -122,11 +140,16 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     <div>
       <h1>Речі Феміністичної майстерні</h1>
       <p class="sub">Що в нас є, де воно лежить і в кого зараз.</p>
+      <div class="tabs" role="tablist" aria-label="Розділи">
+        <button type="button" role="tab" id="tabItems" aria-controls="viewItems" aria-selected="true">Речі</button>
+        <button type="button" role="tab" id="tabKeys" aria-controls="viewKeys" aria-selected="false">Облік ключів</button>
+      </div>
     </div>
   </header>
 
   <div id="banner" class="banner" hidden></div>
 
+  <section id="viewItems" role="tabpanel" aria-labelledby="tabItems">
   <section class="stats" aria-label="Підсумки">
     <div class="stat"><b id="sCount">0</b><span>речей в обліку</span></div>
     <div class="stat"><b id="sOut">0</b><span>зараз видано</span></div>
@@ -136,17 +159,35 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     <input type="search" id="q" placeholder="Пошук: назва, номер, у кого, де лежить" aria-label="Пошук">
     <select id="fStatus" aria-label="Статус">
       <option value="">Усі статуси</option>
-      <option value="na-misci">На місці</option>
+      <option value="na-misci">В офісі</option>
       <option value="vydano">Видано</option>
       <option value="remont">У ремонті</option>
       <option value="spysano">Списано</option>
     </select>
     <select id="fCat" aria-label="Категорія"><option value="">Усі категорії</option></select>
+    <select id="fBal" aria-label="Баланс">
+      <option value="">Баланс: усі</option>
+      <option value="yes">Є на балансі</option>
+      <option value="no">Немає на балансі</option>
+    </select>
     <button class="btn" id="exportBtn" type="button">Вивантажити CSV</button>
     <button class="btn primary" id="addBtn" type="button">Додати річ</button>
   </div>
 
   <div class="list" id="list" aria-live="polite"><div class="empty">Завантажуємо облік…</div></div>
+  </section>
+
+  <section id="viewKeys" role="tabpanel" aria-labelledby="tabKeys" hidden>
+    <section class="stats" aria-label="Підсумки ключів">
+      <div class="stat"><b id="kPeople">0</b><span>людей із ключами</span></div>
+      <div class="stat"><b id="kTotal">0</b><span>ключів на руках</span></div>
+    </section>
+    <div class="toolbar">
+      <input type="search" id="kq" placeholder="Пошук: ім’я або ключ, наприклад «склад»" aria-label="Пошук ключів">
+      <button class="btn primary" id="addPersonBtn" type="button">Додати людину</button>
+    </div>
+    <div class="list" id="keyList" aria-live="polite"><div class="empty">Завантажуємо…</div></div>
+  </section>
 </div>
 
 <!-- Картка речі -->
@@ -162,11 +203,11 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
         <div class="hint">Підставляємо наступний вільний, можна змінити</div>
       </label>
       <label>Категорія
-        <input name="category" list="catList" maxlength="60" placeholder="Техніка, звук, меблі…">
+        <input name="category" list="catList" maxlength="60" placeholder="Ноутбуки й планшети, джерела енергії…">
       </label>
       <label>Статус
         <select name="status">
-          <option value="na-misci">На місці</option>
+          <option value="na-misci">В офісі</option>
           <option value="vydano">Видано</option>
           <option value="remont">У ремонті</option>
           <option value="spysano">Списано</option>
@@ -193,6 +234,13 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
       <label>Дата придбання
         <input name="bought" type="date">
       </label>
+      <fieldset class="seg full">
+        <legend>Баланс</legend>
+        <div class="opts">
+          <label><input type="radio" name="balance" value="yes"> Є на балансі</label>
+          <label><input type="radio" name="balance" value="no"> Немає на балансі</label>
+        </div>
+      </fieldset>
       <label class="full">Серійний номер
         <input name="serial" maxlength="80">
       </label>
@@ -241,18 +289,57 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
   </form>
 </dialog>
 
+<!-- Людина з ключами -->
+<dialog id="keyDlg" aria-labelledby="keyTitle">
+  <form class="dlg" id="keyForm" method="dialog" novalidate>
+    <h2 id="keyTitle">Нова людина</h2>
+    <div class="grid">
+      <label class="full">Ім’я та прізвище
+        <input name="name" required maxlength="80">
+      </label>
+      <label class="full">Контакт або роль
+        <input name="contact" maxlength="120" placeholder="Телефон, посада">
+      </label>
+      <div class="full">
+        <div style="font-size:14px;font-weight:500">Ключі</div>
+        <div class="keys" id="keyChips" style="margin-top:6px"></div>
+        <div class="keyadd">
+          <input id="keyInput" maxlength="60" placeholder="Від чого ключ: вхідні двері, склад…" aria-label="Новий ключ">
+          <button type="button" class="btn" id="keyAddBtn">Додати ключ</button>
+        </div>
+      </div>
+      <label class="full">Примітки
+        <textarea name="notes" maxlength="1000"></textarea>
+      </label>
+    </div>
+    <div class="hist" id="kHistBox" hidden>
+      <h3>Історія</h3>
+      <ol id="kHistList"></ol>
+    </div>
+    <div class="err" id="keyErr" hidden></div>
+    <div class="dlg-foot">
+      <button type="button" class="btn danger" id="kDelBtn" hidden>Видалити</button>
+      <div class="r">
+        <button type="button" class="btn" data-close>Скасувати</button>
+        <button type="submit" class="btn primary">Зберегти</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 <datalist id="catList"></datalist>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
 (function(){
   "use strict";
-  const STATUS = {"na-misci":"На місці","vydano":"Видано","remont":"У ремонті","spysano":"Списано"};
+  const STATUS = {"na-misci":"В офісі","vydano":"Видано","remont":"У ремонті","spysano":"Списано"};
   const SOURCE = {vlasni:"Власні кошти",grant:"Грант",pozhertva:"Пожертва",inshe:"Інше"};
   const PREFIX = "ФМ";
-  const BASE_CATS = ["Ноутбуки й комп’ютери","Фото й відео","Звук","Телефони й планшети","Меблі","Офісне","Інше"];
+  const BASE_CATS = ["Ноутбуки й планшети","Телефони","Фото й відео","Звук","Джерела енергії","Меблі","Офісне","Інше"];
+  const BALANCE = {yes:"на балансі",no:"не на балансі"};
   const $ = s => document.querySelector(s);
-  const state = {items:[], q:"", status:"", cat:"", editingId:null, issuingId:null, canWrite:true, mode:"loading", me:null};
+  const state = {items:[], keys:[], tab:"items", kq:"", bal:"", q:"", status:"", cat:"", editingId:null, issuingId:null, canWrite:true, mode:"loading", me:null};
 
   // ---------- helpers ----------
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -289,41 +376,42 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     return data;
   }
   function accessProblem(e){
-    if(e.code==="access_not_configured") return "Сервер працює, але вхід через Cloudflare Access ще не налаштований. Пройдіть кроки 6–7 з інструкції.";
     if(e.status===401 || e.status===403) return "Немає доступу або сесія закінчилася. Оновіть сторінку й увійдіть ще раз.";
     return null;
   }
   async function load(){
     try{
-      const data = await api("GET", "/api/items");
-      state.items = data.items || []; state.me = data.me || null; state.mode = "api";
-      banner(""); render();
+      const [data, kd] = await Promise.all([api("GET", "/api/items"), api("GET", "/api/keys")]);
+      state.items = data.items || []; state.keys = kd.items || []; state.me = data.me || null; state.mode = "api";
+      banner(""); render(); renderKeys();
     }catch(e){
       const p = accessProblem(e);
-      if(state.mode==="loading"){ state.mode = "api"; render(); }
+      if(state.mode==="loading"){ state.mode = "api"; render(); renderKeys(); }
       banner(p || "Не можемо дістатися до сервера. Показуємо останні завантажені дані, вони можуть бути неактуальними.");
     }
   }
-  const store = {
-    async save(item){
-      const clean = JSON.parse(JSON.stringify(item)); const version = clean._v || 0; delete clean.id; delete clean._v;
-      const r = await api("PUT", "/api/items/" + encodeURIComponent(item.id), {version, item:clean});
-      const i = state.items.findIndex(x=>x.id===item.id);
-      const saved = Object.assign({}, r.item, {id:item.id, _v:r.version});
-      if(i>=0) state.items[i] = saved; else state.items.push(saved);
-      render();
-    },
-    async remove(id){
-      await api("DELETE", "/api/items/" + encodeURIComponent(id));
-      state.items = state.items.filter(x=>x.id!==id); render();
-    }
-  };
+  // coll: "items" (речі) або "keys" (люди з ключами)
+  async function saveDoc(coll, doc){
+    const clean = JSON.parse(JSON.stringify(doc)); const version = clean._v || 0; delete clean.id; delete clean._v;
+    const r = await api("PUT", `/api/${coll}/` + encodeURIComponent(doc.id), {version, item:clean});
+    const arr = coll==="items" ? state.items : state.keys;
+    const i = arr.findIndex(x=>x.id===doc.id);
+    const saved = Object.assign({}, r.item, {id:doc.id, _v:r.version});
+    if(i>=0) arr[i] = saved; else arr.push(saved);
+    coll==="items" ? render() : renderKeys();
+  }
+  async function removeDoc(coll, id){
+    await api("DELETE", `/api/${coll}/` + encodeURIComponent(id));
+    if(coll==="items"){ state.items = state.items.filter(x=>x.id!==id); render(); }
+    else { state.keys = state.keys.filter(x=>x.id!==id); renderKeys(); }
+  }
+  const store = { save: item => saveDoc("items", item), remove: id => removeDoc("items", id) };
   async function withRetry(fn){
     try{ return await fn(); }
     catch(e){ if(e.status===0 || e.status>=500){ await new Promise(r=>setTimeout(r,500+Math.random()*700)); return fn(); } throw e; }
   }
   function errText(e){
-    if(e.status===409){ load(); return "Хтось щойно змінив цю річ. Ми підтягнули свіжі дані: перевірте й повторіть."; }
+    if(e.status===409){ load(); return "Хтось щойно змінив цей запис. Ми підтягнули свіжі дані: перевірте й повторіть."; }
     const p = accessProblem(e); if(p) return p;
     if(e.status===400) return "Сервер не прийняв дані. Перевірте поля й спробуйте ще раз.";
     return "Не вдалося зберегти. Перевірте з’єднання і спробуйте ще раз.";
@@ -339,6 +427,7 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     return state.items.filter(it=>{
       if(state.status && it.status!==state.status) return false;
       if(state.cat && (it.category||"")!==state.cat) return false;
+      if(state.bal && (it.balance||"")!==state.bal) return false;
       if(q){
         const hay = [it.name,it.inv,it.holder,it.location,it.responsible,it.serial,it.donor,it.category].join(" ").toLowerCase();
         if(!hay.includes(q)) return false;
@@ -371,7 +460,7 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     list.innerHTML = `<div class="row head" aria-hidden="true"><span>Номер</span><span>Річ</span><span>Статус</span><span>У кого / де</span><span></span></div>` +
       rows.map(it=>{
         const chip = `<span class="chip ${esc(it.status)}">${STATUS[it.status]||"—"}</span>`;
-        const metaBits = esc(it.category||"");
+        const metaBits = [it.category, BALANCE[it.balance]].filter(Boolean).map(esc).join(", ");
         let who;
         if(it.status==="vydano"){
           who = `${esc(it.holder||"Без імені")}${it.due?`<br><span class="meta">до ${fmtDate(it.due)}</span>`:""}`;
@@ -404,6 +493,8 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     f.name.value = it?.name||""; f.inv.value = it?.inv || nextInv();
     f.category.value = it?.category||""; f.status.value = it?.status||"na-misci"; f.location.value = it?.location||"";
     f.responsible.value = it?.responsible||""; f.source.value = it?.source||"vlasni"; f.donor.value = it?.donor||"";
+    const bal = it ? (it.balance||"") : "yes";
+    for(const r of itemForm.querySelectorAll('[name="balance"]')) r.checked = r.value===bal;
     f.bought.value = it?.bought||""; f.serial.value = it?.serial||""; f.notes.value = it?.notes||"";
     f.status.querySelector('[value="vydano"]').disabled = !(it && it.status==="vydano");
     for(const el of f) if(el.name) el.disabled = el.disabled || !state.canWrite;
@@ -412,8 +503,8 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     renderHistory(it);
     itemDlg.showModal(); if(state.canWrite) setTimeout(()=>f.name.focus(),0);
   }
-  async function renderHistory(it){
-    const box = $("#histBox"), ol = $("#histList");
+  async function renderHistory(it, boxSel="#histBox", listSel="#histList"){
+    const box = $(boxSel), ol = $(listSel);
     const h = it && Array.isArray(it.history) ? it.history : [];
     if(!h.length){ box.hidden = true; return; }
     box.hidden = false;
@@ -442,7 +533,8 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
       name, inv: inv || nextInv(item.id), category:f.category.value.trim(),
       status:f.status.value, location:f.location.value.trim(), responsible:f.responsible.value.trim(),
       source:f.source.value, donor:f.donor.value.trim(), bought:f.bought.value,
-      serial:f.serial.value.trim(), notes:f.notes.value.trim(), updated:new Date().toISOString()
+      serial:f.serial.value.trim(), notes:f.notes.value.trim(), updated:new Date().toISOString(),
+      balance:(itemForm.querySelector('[name="balance"]:checked')||{}).value||""
     });
     if(item.status!=="vydano"){ item.holder=""; item.due=""; item.purpose=""; }
     if(!prev) addHistory(item, "Додали в облік");
@@ -451,6 +543,7 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
       if(prev.status!==item.status) ch.push(`статус: ${STATUS[item.status]}`);
       if((prev.location||"")!==item.location) ch.push(`місце: ${item.location||"не вказано"}`);
       if((prev.responsible||"")!==item.responsible) ch.push(`відповідає: ${item.responsible||"ніхто"}`);
+      if((prev.balance||"")!==item.balance && item.balance) ch.push(BALANCE[item.balance]);
       addHistory(item, ch.length ? "Змінили " + ch.join(", ") : "Оновили картку");
     }
     try{ await withRetry(()=>store.save(item)); itemDlg.close(); toast(prev?"Зберегли":"Додали в облік"); }
@@ -496,22 +589,116 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
   // ---------- CSV ----------
   $("#exportBtn").addEventListener("click", async ()=>{
     const rows = filtered();
-    const head = ["Інв. номер","Назва","Категорія","Статус","Де лежить","Відповідальна особа","У кого","Повернути до","Звідки","Грант / донор","Дата придбання","Серійний номер","Примітки"];
+    const head = ["Інв. номер","Назва","Категорія","Статус","Де лежить","Відповідальна особа","У кого","Повернути до","Звідки","Грант / донор","Дата придбання","Баланс","Серійний номер","Примітки"];
     const q = v => { const s = String(v ?? ""); return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
     const lines = [head.map(q).join(";")].concat(rows.map(it=>[
       it.inv, it.name, it.category, STATUS[it.status], it.location, it.responsible,
       it.status==="vydano"?it.holder:"", it.status==="vydano"?fmtDate(it.due):"", SOURCE[it.source], it.donor,
-      fmtDate(it.bought), it.serial, it.notes
+      fmtDate(it.bought), it.balance==="yes"?"Є на балансі":it.balance==="no"?"Немає на балансі":"", it.serial, it.notes
     ].map(q).join(";")));
     const blob = new Blob(["\uFEFF"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `richi-maisterni-${todayISO()}.csv`;
     document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   });
 
+  // ---------- ключі ----------
+  function keysFiltered(){
+    const q = state.kq.trim().toLowerCase();
+    return state.keys.filter(p=> !q || [p.name, p.contact, ...(p.keys||[])].join(" ").toLowerCase().includes(q))
+      .sort((a,b)=>(a.name||"").localeCompare(b.name||"","uk"));
+  }
+  function renderKeys(){
+    $("#kPeople").textContent = state.keys.filter(p=>(p.keys||[]).length).length;
+    $("#kTotal").textContent = state.keys.reduce((n,p)=>n+(p.keys||[]).length,0);
+    const list = $("#keyList");
+    if(state.mode==="loading"){ list.innerHTML = `<div class="empty">Завантажуємо…</div>`; return; }
+    if(!state.keys.length){ list.innerHTML = `<div class="empty"><p>Тут поки нікого. Додайте людину й ключі, які в неї є.</p><button class="btn primary" type="button" data-kact="add">Додати першу людину</button></div>`; return; }
+    const rows = keysFiltered();
+    if(!rows.length){ list.innerHTML = `<div class="empty"><p>Нікого не знайшли.</p></div>`; return; }
+    list.innerHTML = rows.map(p=>`<div class="krow" data-kopen="${esc(p.id)}" tabindex="0" role="button" aria-label="Відкрити: ${esc(p.name)}">
+        <div><div class="name">${esc(p.name)}</div>${p.contact?`<div class="meta">${esc(p.contact)}</div>`:""}</div>
+        <div class="keys">${(p.keys||[]).length ? p.keys.map(k=>`<span class="key">${esc(k)}</span>`).join("") : `<span class="meta">ключів немає</span>`}</div>
+      </div>`).join("");
+  }
+  const keyDlg = $("#keyDlg"), keyForm = $("#keyForm");
+  let kEditing = null, kTemp = [];
+  function drawChips(){
+    $("#keyChips").innerHTML = kTemp.length
+      ? kTemp.map((k,i)=>`<span class="key">${esc(k)}<button type="button" data-kdel="${i}" aria-label="Прибрати ключ ${esc(k)}">×</button></span>`).join("")
+      : `<span class="meta">Поки жодного</span>`;
+  }
+  function openPerson(id){
+    const p = id ? state.keys.find(x=>x.id===id) : null;
+    kEditing = p ? p.id : null; kTemp = p ? (p.keys||[]).slice() : [];
+    keyForm.reset(); $("#keyErr").hidden = true;
+    $("#keyTitle").textContent = p ? p.name : "Нова людина";
+    keyForm.elements.name.value = p?.name||""; keyForm.elements.contact.value = p?.contact||""; keyForm.elements.notes.value = p?.notes||"";
+    const del = $("#kDelBtn"); del.hidden = !p; del.textContent = "Видалити"; del.dataset.armed = "";
+    drawChips(); renderHistory(p, "#kHistBox", "#kHistList");
+    keyDlg.showModal(); setTimeout(()=>keyForm.elements.name.focus(),0);
+  }
+  function addKeyFromInput(){
+    const inp = $("#keyInput"); const v = inp.value.trim();
+    if(!v) return;
+    if(kTemp.some(k=>k.toLowerCase()===v.toLowerCase())){ inp.select(); return; }
+    kTemp.push(v); inp.value = ""; drawChips(); inp.focus();
+  }
+  $("#keyAddBtn").addEventListener("click", addKeyFromInput);
+  $("#keyInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addKeyFromInput(); } });
+  $("#keyChips").addEventListener("click", e=>{ const b = e.target.closest("[data-kdel]"); if(b){ kTemp.splice(Number(b.dataset.kdel),1); drawChips(); } });
+  keyForm.addEventListener("submit", async ev=>{
+    ev.preventDefault();
+    addKeyFromInput();
+    const f = keyForm.elements, err = $("#keyErr");
+    const name = f.name.value.trim();
+    if(!name){ err.textContent = "Вкажіть ім’я."; err.hidden = false; f.name.focus(); return; }
+    const prev = state.keys.find(x=>x.id===kEditing);
+    const p = prev ? JSON.parse(JSON.stringify(prev)) : {id:uid(), created:new Date().toISOString(), history:[]};
+    Object.assign(p, {name, contact:f.contact.value.trim(), notes:f.notes.value.trim(), keys:kTemp.slice(), updated:new Date().toISOString()});
+    if(!prev) addHistory(p, kTemp.length ? `Додали людину з ключами: ${kTemp.join(", ")}` : "Додали людину");
+    else {
+      const was = prev.keys||[]; const ch = [];
+      const added = kTemp.filter(k=>!was.includes(k)), gone = was.filter(k=>!kTemp.includes(k));
+      if(added.length) ch.push(`видали ключ: ${added.join(", ")}`);
+      if(gone.length) ch.push(`повернули ключ: ${gone.join(", ")}`);
+      addHistory(p, ch.length ? ch.join("; ").replace(/^./, c=>c.toUpperCase()) : "Оновили картку");
+    }
+    try{ await withRetry(()=>saveDoc("keys", p)); keyDlg.close(); toast(prev?"Зберегли":"Додали"); }
+    catch(e){ err.textContent = errText(e); err.hidden = false; }
+  });
+  $("#kDelBtn").addEventListener("click", async e=>{
+    const b = e.currentTarget;
+    if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Точно видалити?"; setTimeout(()=>{ if(b.isConnected){b.dataset.armed="";b.textContent="Видалити";} },4000); return; }
+    try{ await withRetry(()=>removeDoc("keys", kEditing)); keyDlg.close(); toast("Видалили"); }
+    catch(er){ const err=$("#keyErr"); err.textContent = errText(er); err.hidden=false; }
+  });
+  $("#addPersonBtn").addEventListener("click", ()=>openPerson(null));
+  let kqT; $("#kq").addEventListener("input", e=>{ clearTimeout(kqT); kqT=setTimeout(()=>{ state.kq=e.target.value; renderKeys(); },120); });
+  $("#keyList").addEventListener("click", e=>{
+    if(e.target.closest('[data-kact="add"]')) return openPerson(null);
+    const r = e.target.closest("[data-kopen]"); if(r) openPerson(r.dataset.kopen);
+  });
+  $("#keyList").addEventListener("keydown", e=>{
+    if((e.key==="Enter"||e.key===" ") && e.target.matches("[data-kopen]")){ e.preventDefault(); openPerson(e.target.dataset.kopen); }
+  });
+
+  // ---------- вкладки ----------
+  function showTab(tab){
+    state.tab = tab;
+    $("#tabItems").setAttribute("aria-selected", String(tab==="items"));
+    $("#tabKeys").setAttribute("aria-selected", String(tab==="keys"));
+    $("#viewItems").hidden = tab!=="items"; $("#viewKeys").hidden = tab!=="keys";
+  }
+  $("#tabItems").addEventListener("click", ()=>{ showTab("items"); history.replaceState(null, "", location.pathname); });
+  $("#tabKeys").addEventListener("click", ()=>{ showTab("keys"); location.hash = "kliuchi"; });
+  window.addEventListener("hashchange", ()=>showTab(location.hash==="#kliuchi" ? "keys" : "items"));
+  showTab(location.hash==="#kliuchi" ? "keys" : "items");
+
   // ---------- events ----------
   let qT; $("#q").addEventListener("input", e=>{ clearTimeout(qT); qT=setTimeout(()=>{ state.q=e.target.value; render(); },120); });
   $("#fStatus").addEventListener("change", e=>{ state.status=e.target.value; render(); });
   $("#fCat").addEventListener("change", e=>{ state.cat=e.target.value; render(); });
+  $("#fBal").addEventListener("change", e=>{ state.bal=e.target.value; render(); });
   $("#addBtn").addEventListener("click", ()=>openItem(null));
   document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
   $("#list").addEventListener("click", e=>{
@@ -519,7 +706,7 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     if(a){
       e.stopPropagation();
       if(a.dataset.act==="add") return openItem(null);
-      if(a.dataset.act==="reset"){ state.q=""; state.status=""; state.cat=""; $("#q").value=""; $("#fStatus").value=""; render(); return; }
+      if(a.dataset.act==="reset"){ state.q=""; state.status=""; state.cat=""; state.bal=""; $("#q").value=""; $("#fStatus").value=""; $("#fBal").value=""; render(); return; }
       if(a.dataset.act==="issue") return openIssue(a.dataset.id);
       if(a.dataset.act==="return") return doReturn(a.dataset.id);
     }
@@ -529,7 +716,7 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     if((e.key==="Enter"||e.key===" ") && e.target.matches("[data-open]")){ e.preventDefault(); openItem(e.target.dataset.open); }
   });
 
-  render();
+  render(); renderKeys();
   load();
 })();
 </script>
