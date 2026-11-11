@@ -33,6 +33,7 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -213,26 +214,22 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
           <option value="spysano">Списано</option>
         </select>
       </label>
+      <label class="issued" hidden>У кого зараз
+        <input name="holder" maxlength="80" placeholder="Ім’я та прізвище">
+      </label>
+      <label class="issued" hidden>Повернути до
+        <input name="due" type="date">
+        <div class="hint">Можна лишити порожнім</div>
+      </label>
       <label>Де лежить
         <input name="location" maxlength="120" placeholder="Офіс, шафа 2">
       </label>
       <label>Відповідальна особа
         <input name="responsible" maxlength="80" placeholder="Хто відповідає за річ">
       </label>
-      <label>Звідки взялася
-        <select name="source">
-          <option value="vlasni">Власні кошти</option>
-          <option value="grant">Грант</option>
-          <option value="pozhertva">Пожертва</option>
-          <option value="inshe">Інше</option>
-        </select>
-      </label>
       <label>Грант або донор
         <input name="donor" maxlength="120" placeholder="Назва програми чи донора">
         <div class="hint">Знадобиться для звіту донорові</div>
-      </label>
-      <label>Дата придбання
-        <input name="bought" type="date">
       </label>
       <fieldset class="seg full">
         <legend>Баланс</legend>
@@ -334,9 +331,12 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
 (function(){
   "use strict";
   const STATUS = {"na-misci":"В офісі","vydano":"Видано","remont":"У ремонті","spysano":"Списано"};
-  const SOURCE = {vlasni:"Власні кошти",grant:"Грант",pozhertva:"Пожертва",inshe:"Інше"};
   const PREFIX = "ФМ";
-  const BASE_CATS = ["Ноутбуки й планшети","Телефони","Фото й відео","Звук","Джерела енергії","Меблі","Офісне","Інше"];
+  const TECH = "Ноутбуки, планшети й телефони";
+  const BASE_CATS = [TECH,"Фото й відео","Звук","Джерела енергії","Меблі","Офісне","Інше"];
+  // Старі назви категорій показуємо як нову об’єднану, у базі нічого не стирається
+  const OLD_TECH = ["Ноутбуки й планшети","Телефони","Ноутбуки й комп’ютери","Телефони й планшети"];
+  const normCat = c => OLD_TECH.includes(c) ? TECH : c;
   const BALANCE = {yes:"на балансі",no:"не на балансі"};
   const $ = s => document.querySelector(s);
   const state = {items:[], keys:[], tab:"items", kq:"", bal:"", q:"", status:"", cat:"", editingId:null, issuingId:null, canWrite:true, mode:"loading", me:null};
@@ -380,15 +380,12 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     return null;
   }
   async function load(){
-    try{
-      const [data, kd] = await Promise.all([api("GET", "/api/items"), api("GET", "/api/keys")]);
-      state.items = data.items || []; state.keys = kd.items || []; state.me = data.me || null; state.mode = "api";
-      banner(""); render(); renderKeys();
-    }catch(e){
-      const p = accessProblem(e);
-      if(state.mode==="loading"){ state.mode = "api"; render(); renderKeys(); }
-      banner(p || "Не можемо дістатися до сервера. Показуємо останні завантажені дані, вони можуть бути неактуальними.");
-    }
+    // Речі й ключі вантажимо окремо: якщо одне не відповіло, друге все одно покажемо
+    const [ri, rk] = await Promise.allSettled([api("GET", "/api/items"), api("GET", "/api/keys")]);
+    if(ri.status==="fulfilled"){ state.items = (ri.value.items || []).map(it=>Object.assign(it, {category: normCat(it.category||"")})); state.me = ri.value.me || null; }
+    if(rk.status==="fulfilled"){ state.keys = rk.value.items || []; }
+    state.mode = "api"; render(); renderKeys();
+    if(ri.status==="rejected" && rk.status==="rejected" && ri.reason.status===0) toast("Немає зв’язку з сервером, спробуємо ще раз за хвилину");
   }
   // coll: "items" (речі) або "keys" (люди з ключами)
   async function saveDoc(coll, doc){
@@ -492,17 +489,23 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     $("#itemTitle").textContent = it ? it.name : "Нова річ";
     f.name.value = it?.name||""; f.inv.value = it?.inv || nextInv();
     f.category.value = it?.category||""; f.status.value = it?.status||"na-misci"; f.location.value = it?.location||"";
-    f.responsible.value = it?.responsible||""; f.source.value = it?.source||"vlasni"; f.donor.value = it?.donor||"";
+    f.responsible.value = it?.responsible||""; f.donor.value = it?.donor||"";
     const bal = it ? (it.balance||"") : "yes";
     for(const r of itemForm.querySelectorAll('[name="balance"]')) r.checked = r.value===bal;
-    f.bought.value = it?.bought||""; f.serial.value = it?.serial||""; f.notes.value = it?.notes||"";
-    f.status.querySelector('[value="vydano"]').disabled = !(it && it.status==="vydano");
+    f.serial.value = it?.serial||""; f.notes.value = it?.notes||"";
+    f.holder.value = it?.status==="vydano" ? (it.holder||"") : ""; f.due.value = it?.status==="vydano" ? (it.due||"") : "";
+    toggleIssued();
     for(const el of f) if(el.name) el.disabled = el.disabled || !state.canWrite;
     $("#saveBtn").hidden = !state.canWrite;
     const del = $("#delBtn"); del.hidden = !(it && state.canWrite); del.textContent = "Видалити"; del.dataset.armed = "";
     renderHistory(it);
     itemDlg.showModal(); if(state.canWrite) setTimeout(()=>f.name.focus(),0);
   }
+  function toggleIssued(){
+    const on = itemForm.elements.status.value==="vydano";
+    itemForm.querySelectorAll(".issued").forEach(el=>el.hidden = !on);
+  }
+  itemForm.elements.status.addEventListener("change", ()=>{ toggleIssued(); if(itemForm.elements.status.value==="vydano") itemForm.elements.holder.focus(); });
   async function renderHistory(it, boxSel="#histBox", listSel="#histList"){
     const box = $(boxSel), ol = $(listSel);
     const h = it && Array.isArray(it.history) ? it.history : [];
@@ -527,24 +530,29 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
     if(inv && state.items.some(x=>x.id!==state.editingId && String(x.inv).toLowerCase()===inv.toLowerCase())){
       err.textContent = `Номер ${inv} уже зайнятий. Підставте інший.`; err.hidden = false; f.inv.focus(); return;
     }
+    const holder = f.holder.value.trim();
+    if(f.status.value==="vydano" && !holder){ err.textContent = "Вкажіть, у кого зараз ця річ."; err.hidden = false; f.holder.focus(); return; }
     const prev = state.items.find(x=>x.id===state.editingId);
     const item = prev ? JSON.parse(JSON.stringify(prev)) : {id:uid(), created:new Date().toISOString(), history:[]};
     Object.assign(item, {
       name, inv: inv || nextInv(item.id), category:f.category.value.trim(),
       status:f.status.value, location:f.location.value.trim(), responsible:f.responsible.value.trim(),
-      source:f.source.value, donor:f.donor.value.trim(), bought:f.bought.value,
+      donor:f.donor.value.trim(),
       serial:f.serial.value.trim(), notes:f.notes.value.trim(), updated:new Date().toISOString(),
       balance:(itemForm.querySelector('[name="balance"]:checked')||{}).value||""
     });
-    if(item.status!=="vydano"){ item.holder=""; item.due=""; item.purpose=""; }
-    if(!prev) addHistory(item, "Додали в облік");
+    if(item.status==="vydano"){ item.holder = holder; item.due = f.due.value; }
+    else { item.holder=""; item.due=""; item.purpose=""; }
+    const issuedText = item.status==="vydano" ? `видано: ${holder}${item.due?`, до ${fmtDate(item.due)}`:""}` : "";
+    if(!prev) addHistory(item, issuedText ? `Додали в облік, ${issuedText}` : "Додали в облік");
     else {
       const ch = [];
-      if(prev.status!==item.status) ch.push(`статус: ${STATUS[item.status]}`);
+      if(item.status==="vydano" && (prev.status!=="vydano" || (prev.holder||"")!==holder || (prev.due||"")!==item.due)) ch.push(issuedText);
+      else if(prev.status!==item.status) ch.push(`статус: ${STATUS[item.status]}`);
       if((prev.location||"")!==item.location) ch.push(`місце: ${item.location||"не вказано"}`);
       if((prev.responsible||"")!==item.responsible) ch.push(`відповідає: ${item.responsible||"ніхто"}`);
       if((prev.balance||"")!==item.balance && item.balance) ch.push(BALANCE[item.balance]);
-      addHistory(item, ch.length ? "Змінили " + ch.join(", ") : "Оновили картку");
+      addHistory(item, ch.length ? ch.join(", ").replace(/^./, c=>c.toUpperCase()) : "Оновили картку");
     }
     try{ await withRetry(()=>store.save(item)); itemDlg.close(); toast(prev?"Зберегли":"Додали в облік"); }
     catch(e){ err.textContent = errText(e); err.hidden = false; }
@@ -589,12 +597,12 @@ label > input,label > select,label > textarea{margin-top:5px;font-weight:400}
   // ---------- CSV ----------
   $("#exportBtn").addEventListener("click", async ()=>{
     const rows = filtered();
-    const head = ["Інв. номер","Назва","Категорія","Статус","Де лежить","Відповідальна особа","У кого","Повернути до","Звідки","Грант / донор","Дата придбання","Баланс","Серійний номер","Примітки"];
+    const head = ["Інв. номер","Назва","Категорія","Статус","Де лежить","Відповідальна особа","У кого","Повернути до","Грант / донор","Баланс","Серійний номер","Примітки"];
     const q = v => { const s = String(v ?? ""); return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
     const lines = [head.map(q).join(";")].concat(rows.map(it=>[
       it.inv, it.name, it.category, STATUS[it.status], it.location, it.responsible,
-      it.status==="vydano"?it.holder:"", it.status==="vydano"?fmtDate(it.due):"", SOURCE[it.source], it.donor,
-      fmtDate(it.bought), it.balance==="yes"?"Є на балансі":it.balance==="no"?"Немає на балансі":"", it.serial, it.notes
+      it.status==="vydano"?it.holder:"", it.status==="vydano"?fmtDate(it.due):"", it.donor,
+      it.balance==="yes"?"Є на балансі":it.balance==="no"?"Немає на балансі":"", it.serial, it.notes
     ].map(q).join(";")));
     const blob = new Blob(["\uFEFF"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `richi-maisterni-${todayISO()}.csv`;
